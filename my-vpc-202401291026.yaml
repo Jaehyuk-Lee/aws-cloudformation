@@ -310,7 +310,19 @@ Resources:
       Tags:
         - Key: Name
           Value: wm-book-rds-sg
-          
+
+  RDSSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: wm-book-rds-db-subnet
+      DBSubnetGroupName: wm-book-rds-db-subnet
+      SubnetIds:
+        - !Ref PrivateSubnetDbA
+        - !Ref PrivateSubnetDbC
+      Tags:
+        - Key: Name
+          Value: wm-book-rds-db-subnet
+
 #   # ImportedKeyPair:
 #   #   Type: AWS::EC2::KeyPair
 #   #   Properties:
