@@ -208,59 +208,104 @@ Resources:
       RouteTableId: !Ref PrivateRT
       SubnetId: !Ref PrivateSubnetDbC
 
-#   PublicSecurityGroup:
-#     Type: AWS::EC2::SecurityGroup
-#     Properties:
-#       GroupName: "Public subnet Security Group"
-#       GroupDescription: Enable HTTP access via port 80
-#       VpcId: !Ref VPC
-#       SecurityGroupIngress:
-#       - IpProtocol: tcp
-#         FromPort: 80
-#         ToPort: 80
-#         CidrIp: 0.0.0.0/0
-#       Tags:
-#         - Key: Name
-#           Value: my-asg-app-alb-sg-17
-#   BastionSecurityGroup:
-#     Type: AWS::EC2::SecurityGroup
-#     Properties:
-#       GroupName: "Bastion host Security Group"
-#       GroupDescription: Enable HTTP access via port 80 and SSH access via port 22
-#       VpcId: !Ref VPC
-#       SecurityGroupIngress:
-#       - IpProtocol: tcp
-#         FromPort: 80
-#         ToPort: 80
-#         CidrIp: !Ref MyIPAddress
-#       - IpProtocol: tcp
-#         FromPort: 22
-#         ToPort: 22
-#         CidrIp: !Ref MyIPAddress
-#       Tags:
-#         - Key: Name
-#           Value: my-openvpn-sg-17
-#   PrivateSecurityGroup:
-#     Type: AWS::EC2::SecurityGroup
-#     Properties:
-#       GroupName: "Private subnet Security Group"
-#       GroupDescription: Enable HTTP access via port 80  and SSH access via port 22
-#       VpcId: !Ref VPC
-#       SecurityGroupIngress:
-#       - IpProtocol: tcp
-#         FromPort: 80
-#         ToPort: 80
-#         SourceSecurityGroupName:
-#           Ref: BastionSecurityGroup
-#       - IpProtocol: tcp
-#         FromPort: 22
-#         ToPort: 22
-#         SourceSecurityGroupName:
-#           Ref: BastionSecurityGroup
-#       Tags:
-#         - Key: Name
-#           Value: my-asg-app-ec2-sg-17
-
+# Type: AWS::EC2::SecurityGroup
+# Properties:
+#   GroupDescription: String
+#   GroupName: String
+#   SecurityGroupEgress: 
+#     - Egress
+#   SecurityGroupIngress: 
+#     - Ingress
+#   Tags: 
+#     - Tag
+#   VpcId: String
+  BastionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP access via port 80 and SSH access via port 22
+      GroupName: "Public subnet Security Group"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        ToPort: 80
+        FromPort: 80
+        CidrIp: !Ref MyIPAddress
+      - IpProtocol: tcp
+        ToPort: 22
+        FromPort: 22
+        CidrIp: !Ref MyIPAddress
+      Tags:
+        - Key: Name
+          Value: wm-bastion-jump-server-sg
+  ALBFrontendSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP/HTTPS access via port 80 and 443 access
+      GroupName: "ALB frontend subnet Security Group"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        ToPort: 80
+        FromPort: 80
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        ToPort: 443
+        FromPort: 443
+        CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: wm-ALB-frontend-sg
+  ALBBackendSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP/HTTPS access via port 80 and 443 access
+      GroupName: "ALB backend subnet Security Group"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        ToPort: 80
+        FromPort: 80
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        ToPort: 443
+        FromPort: 443
+        CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: wm-ALB-backend-sg
+  BackendSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP access via port 80 and SSH access via port 22
+      GroupName: "Backend subnet Security Group"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        ToPort: 80
+        FromPort: 80
+        SourceSecurityGroupName: !Ref ALBBackendSecurityGroup
+      - IpProtocol: tcp
+        ToPort: 22
+        FromPort: 22
+        SourceSecurityGroupName: !Ref BastionSecurityGroup
+      Tags:
+        - Key: Name
+          Value: wm-backend-sg
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable MySQL access via port 3306
+      GroupName: "RDS subnet Security Group"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        ToPort: 3306
+        FromPort: 3306
+        SourceSecurityGroupName: !Ref BackendSecurityGroup
+      Tags:
+        - Key: Name
+          Value: wm-book-rds-sg
+          
 #   # ImportedKeyPair:
 #   #   Type: AWS::EC2::KeyPair
 #   #   Properties:
