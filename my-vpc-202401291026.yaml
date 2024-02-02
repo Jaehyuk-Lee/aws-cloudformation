@@ -10,7 +10,7 @@ Parameters:
     Default: "0.0.0.0/32"
   KeyPairName:
     Type: String
-    # Default: new-key-pair
+    Default: control-machine
     Description: The key pair used to access the instance.
   VpcCidr:
     Type: String
