@@ -275,6 +275,9 @@ Resources:
           Value: wm-ALB-backend-sg
   BackendSecurityGroup:
     Type: AWS::EC2::SecurityGroup
+    DependsOn: 
+      - ALBBackendSecurityGroup
+      - BastionSecurityGroup
     Properties:
       GroupDescription: Enable HTTP access via port 80 and SSH access via port 22
       GroupName: "Backend subnet Security Group"
@@ -283,16 +286,18 @@ Resources:
       - IpProtocol: tcp
         ToPort: 80
         FromPort: 80
-        SourceSecurityGroupName: !Ref ALBBackendSecurityGroup
+        SourceSecurityGroupId: !Ref ALBBackendSecurityGroup
       - IpProtocol: tcp
         ToPort: 22
         FromPort: 22
-        SourceSecurityGroupName: !Ref BastionSecurityGroup
+        SourceSecurityGroupId: !Ref BastionSecurityGroup
       Tags:
         - Key: Name
           Value: wm-backend-sg
   RDSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
+    DependsOn:
+      - BackendSecurityGroup
     Properties:
       GroupDescription: Enable MySQL access via port 3306
       GroupName: "RDS subnet Security Group"
@@ -301,7 +306,7 @@ Resources:
       - IpProtocol: tcp
         ToPort: 3306
         FromPort: 3306
-        SourceSecurityGroupName: !Ref BackendSecurityGroup
+        SourceSecurityGroupId: !Ref BackendSecurityGroup
       Tags:
         - Key: Name
           Value: wm-book-rds-sg
