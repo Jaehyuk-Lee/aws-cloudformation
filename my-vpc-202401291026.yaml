@@ -15,15 +15,15 @@ Parameters:
   VpcCidr:
     Type: String
     Description: VPC CIDR
-    Default: "10.1.0.0/16"
+    Default: "172.20.0.0/16"
   AvailabilityZoneA:
     Type: String
     Description: AvailabilityZone A
-    Default: "eu-west-1a" # A 대신 B
+    Default: "eu-west-1a"
   AvailabilityZoneC:
     Type: String
     Description: AvailabilityZone C
-    Default: "eu-west-1c" # B 대신 D
+    Default: "eu-west-1c"
 
 Resources:
   VPC:
@@ -33,71 +33,89 @@ Resources:
       EnableDnsHostnames: true
       Tags:
         - Key: Name
-          Value: my-vpc-17
+          Value: wm-Three-tier-app-VPC
   
   PublicSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 10.1.1.0/26
+      CidrBlock: 172.20.1.0/24
       AvailabilityZone: !Ref AvailabilityZoneA
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: my-public-subnet-a-17
+          Value: wm-pub-sub-1a
   PublicSubnetC:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 10.1.1.64/26
+      CidrBlock: 172.20.2.0/24
       AvailabilityZone: !Ref AvailabilityZoneC
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: my-public-subnet-c-17
+          Value: wm-pub-sub-2c
+  PrivateSubnetWebA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 172.20.3.0/24
+      AvailabilityZone: !Ref AvailabilityZoneA
+      Tags:
+        - Key: Name
+          Value: wm-pri-sub-3a
+  PrivateSubnetWebC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 172.20.4.0/24
+      AvailabilityZone: !Ref AvailabilityZoneC
+      Tags:
+        - Key: Name
+          Value: wm-pri-sub-4c
   PrivateSubnetAppA:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 10.1.1.128/27
+      CidrBlock: 172.20.5.0/24
       AvailabilityZone: !Ref AvailabilityZoneA
       Tags:
         - Key: Name
-          Value: my-private-subnet-app-a-17
+          Value: wm-pri-sub-5a
   PrivateSubnetAppC:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 10.1.1.160/27
+      CidrBlock: 172.20.6.0/24
       AvailabilityZone: !Ref AvailabilityZoneC
       Tags:
         - Key: Name
-          Value: my-private-subnet-app-c-17
+          Value: wm-pri-sub-6c
   PrivateSubnetDbA:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 10.1.1.192/27
+      CidrBlock: 172.20.7.0/24
       AvailabilityZone: !Ref AvailabilityZoneA
       Tags:
         - Key: Name
-          Value: my-private-subnet-db-a-17
+          Value: wm-pri-sub-7a
   PrivateSubnetDbC:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 10.1.1.224/27
+      CidrBlock: 172.20.8.0/24
       AvailabilityZone: !Ref AvailabilityZoneC
       Tags:
         - Key: Name
-          Value: my-private-subnet-db-c-17
+          Value: wm-pri-sub-8c
 
   IGW:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: Name
-          Value: my-igw-17
+          Value: wm-IGW-three-tier-app
   Attachigw:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
@@ -109,7 +127,7 @@ Resources:
     Properties:
       Tags:
         - Key: Name
-          Value: my-eip-17
+          Value: wm-nat-eip
   NGW:
     Type: AWS::EC2::NatGateway
     DependsOn: Attachigw
@@ -118,7 +136,7 @@ Resources:
       SubnetId: !Ref PublicSubnetA
       Tags:
         - Key: Name
-          Value: my-ngw-17
+          Value: wm-NAT-GW-three-tier-app
 
   PublicRT:
     Type: AWS::EC2::RouteTable
@@ -126,7 +144,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: my-public-rt-17
+          Value: wm-pub-RT
   PublicRoute:
     Type: AWS::EC2::Route
     DependsOn: Attachigw
@@ -151,7 +169,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: my-private-rt-17
+          Value: wm-pri-RT
   PrivateRoute:
     Type: AWS::EC2::Route
     DependsOn: Attachigw
@@ -159,6 +177,16 @@ Resources:
       RouteTableId: !Ref PrivateRT
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId: !Ref NGW
+  PrivateSubnetWebARTAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRT
+      SubnetId: !Ref PrivateSubnetWebA
+  PrivateSubnetWebCRTAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRT
+      SubnetId: !Ref PrivateSubnetWebC
   PrivateSubnetAppARTAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -198,7 +226,7 @@ Resources:
 #     Type: AWS::EC2::SecurityGroup
 #     Properties:
 #       GroupName: "Bastion host Security Group"
-#       GroupDescription: Enable HTTP access via port 80  and SSH access via port 22
+#       GroupDescription: Enable HTTP access via port 80 and SSH access via port 22
 #       VpcId: !Ref VPC
 #       SecurityGroupIngress:
 #       - IpProtocol: tcp
