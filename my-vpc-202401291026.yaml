@@ -208,17 +208,6 @@ Resources:
       RouteTableId: !Ref PrivateRT
       SubnetId: !Ref PrivateSubnetDbC
 
-# Type: AWS::EC2::SecurityGroup
-# Properties:
-#   GroupDescription: String
-#   GroupName: String
-#   SecurityGroupEgress: 
-#     - Egress
-#   SecurityGroupIngress: 
-#     - Ingress
-#   Tags: 
-#     - Tag
-#   VpcId: String
   BastionSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
