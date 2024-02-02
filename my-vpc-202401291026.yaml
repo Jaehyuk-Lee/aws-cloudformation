@@ -24,6 +24,22 @@ Parameters:
     Type: String
     Description: AvailabilityZone C
     Default: "eu-west-1c"
+  DBMasterUsername:
+    Type: String
+    Default: wmroot
+    Description: The id used to access the database.
+  DBMasterUserPassword:
+    Type: String
+    Default: password
+    Description: The password used to access the database.
+  DBName:
+    Type: String
+    Default: test
+    Description: The name of the database.
+  DBReplicaAvailabilityZoneA:
+    Type: String
+    Default: "eu-west-3a"
+    Description: The availability zone for the read replica.
 
 Resources:
   VPC:
@@ -307,6 +323,47 @@ Resources:
       Tags:
         - Key: Name
           Value: wm-book-rds-db-subnet
+
+  RDSDBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AvailabilityZone: !Ref AvailabilityZoneA
+      DBInstanceIdentifier: wm-book-rds-db
+      DBName: !Ref DBName
+      DBInstanceClass: db.t3.micro
+      Engine: MySQL
+      # EngineVersion: 8.0.35
+      MasterUsername: !Ref DBMasterUsername
+      MasterUserPassword: !Ref DBMasterUserPassword
+      StorageType: gp2
+      AllocatedStorage: '22'
+      MaxAllocatedStorage: '22'
+      BackupRetentionPeriod: 7
+      PubliclyAccessible: false
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroup
+      Tags:
+        - Key: Name
+          Value: wm-book-rds-db
+
+  # RDS 미완
+  # 다른 리전에 Replica DB 생성하는건 수동으로 하던지 하는게 좋을 듯...
+  # ReplicaDB:
+  #   Type: AWS::RDS::DBInstance
+  #   Properties:
+  #     AvailabilityZone: !Ref AvailabilityZoneA
+  #     AutomaticBackupReplicationRegion: !Ref DBReplicaAvailabilityZoneA
+  #     BackupRetentionPeriod: 7
+  #     SourceDBInstanceIdentifier: !Ref RDSDBInstance
+  #     DBInstanceClass: db.t3.micro
+  #     Engine: MySQL
+  #     MasterUsername: !Ref DBMasterUsername
+  #     MasterUserPassword: !Ref DBMasterUserPassword
+  #     StorageType: gp2
+  #     Tags:
+  #     - Key: Name
+  #       Value: wm-book-rds-db
 
 #   # ImportedKeyPair:
 #   #   Type: AWS::EC2::KeyPair
